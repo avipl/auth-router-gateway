@@ -1,0 +1,65 @@
+services:
+  auth:
+    build: .
+    hostname: auth
+    depends_on:
+      pgserver:
+          condition: service_healthy
+      redis:
+          condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - avi-portfolio
+  redis:
+    image: redis:7.2
+    hostname: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - avi-portfolio
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  pgserver:
+    image: postgres:17.2
+    hostname: pgserver
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+    restart: unless-stopped
+    networks:
+      - avi-portfolio
+    volumes:
+      - type: bind
+        source: postgres-data
+        target: /var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $PGUSER" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin-ui:
+    image: dpage/pgadmin4
+    env_file:
+      - .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: test@test.com
+      PGADMIN_DEFAULT_PASSWORD: password@3578
+    ports:
+      - "5000:80"
+    networks:
+      - avi-portfolio
+
+networks:
+  avi-portfolio:
+    name: avi-portfolio
+
+volumes:
+  postgres-data:
