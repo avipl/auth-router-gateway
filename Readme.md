@@ -197,7 +197,7 @@ volumes:
 
 ## Project Structure:
 
-Following is the project structure:
+Following is the project structure,
 
 ```
 .
